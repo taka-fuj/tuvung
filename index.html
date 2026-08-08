@@ -1,0 +1,2022 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Từ Vựng">
+<title>Từ Vựng</title>
+<style>
+:root{
+  --red:#c0392b;--gold:#d4a843;--ink:#1a1a1a;--paper:#f5f0e8;
+  --line:#d8cfc0;--muted:#8a7f72;--green:#2e7d52;--blue:#1a5276;
+  --st:env(safe-area-inset-top);--sb:env(safe-area-inset-bottom);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;overflow:hidden;font-family:-apple-system,sans-serif;background:var(--paper);color:var(--ink);}
+body{display:flex;flex-direction:column;}
+
+header{background:var(--red);color:#fff;flex-shrink:0;padding:calc(10px + var(--st)) 14px 10px;}
+.h-row{display:flex;align-items:baseline;gap:8px;}
+.h-title{font-size:1.1rem;font-weight:700;}
+.h-sub{font-size:.72rem;opacity:.75;}
+.h-stats{font-size:.68rem;opacity:.85;margin-top:3px;display:flex;gap:10px;}
+
+.tabs{display:flex;background:#a93226;flex-shrink:0;}
+.tab{flex:1;padding:9px 2px;border:none;background:none;color:rgba(255,255,255,.5);
+  font-size:.7rem;font-family:inherit;cursor:pointer;border-bottom:2px solid transparent;}
+.tab.on{color:#fff;border-bottom-color:var(--gold);}
+
+#pbanner{background:#fff3cd;border-bottom:1px solid #e8b800;padding:7px 12px;
+  font-size:.75rem;color:#7a5c00;flex-shrink:0;display:none;align-items:center;gap:6px;}
+#pbanner.on{display:flex;}
+
+#bbanner{background:#fff3cd;border-bottom:1px solid #e8b800;padding:7px 12px;
+  font-size:.75rem;color:#7a5c00;flex-shrink:0;display:none;align-items:center;gap:6px;
+  cursor:pointer;-webkit-tap-highlight-color:transparent;}
+#bbanner.on{display:flex;}
+#bbanner.danger{background:#fdecea;border-bottom-color:#c0392b;color:#922b21;}
+#bbanner .bb-act{margin-left:auto;font-weight:700;text-decoration:underline;}
+
+/* bulk paste + inspect */
+.bulk-ta{width:100%;height:120px;border:1px solid var(--line);border-radius:8px;padding:8px;
+  font-size:.75rem;font-family:ui-monospace,Menlo,monospace;background:#fff;
+  -webkit-user-select:text;user-select:text;}
+.bulk-row{display:flex;gap:7px;margin-top:7px;}
+.bulk-row button{flex:1;padding:9px;border:none;border-radius:8px;font-family:inherit;
+  font-size:.76rem;cursor:pointer;color:#fff;}
+.ck-sec{margin:10px 0 0;}
+.ck-sec>h4{font-size:.78rem;margin:0 0 6px;display:flex;align-items:center;gap:6px;}
+.ck-sec>h4 .ck-n{background:var(--line);border-radius:9px;padding:1px 7px;font-size:.68rem;font-weight:400;}
+.ck-g{border:1px solid var(--line);border-radius:9px;padding:8px;margin-bottom:7px;background:#fff;}
+.ck-w{display:flex;align-items:flex-start;gap:6px;padding:5px 0;border-bottom:1px dashed var(--line);}
+.ck-w:last-child{border-bottom:none;}
+.ck-w .ck-t{flex:1;min-width:0;}
+.ck-w .ck-v{font-size:.86rem;font-weight:600;}
+.ck-w .ck-m{font-size:.72rem;color:#666;word-break:break-word;}
+.ck-b{display:flex;gap:4px;flex-shrink:0;}
+.ck-b a,.ck-b button{border:none;border-radius:6px;padding:5px 7px;font-size:.68rem;
+  font-family:inherit;cursor:pointer;text-decoration:none;color:#fff;line-height:1.2;}
+.ck-ok{background:var(--green);} .ck-ed{background:#7d3c98;}
+.ck-mg{background:#d68910;} .ck-fl{background:#7f8c8d;} .ck-fl.on{background:#c0392b;}
+.ck-hint{font-size:.66rem;color:#888;padding:2px 0 6px;}
+.ck-dl{background:var(--red);} .ck-dc{background:#2980b9;}
+.ck-empty{color:var(--green);font-size:.78rem;padding:8px;}
+
+.view{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;display:none;
+  padding-bottom:calc(12px + var(--sb));}
+.view.on{display:block;}
+/* The !important here used to beat .view{display:none}, so the review pane
+   stayed on screen under every other tab. Scope it to the active view instead. */
+.view.on.vcenter{display:flex;flex-direction:column;align-items:center;padding:12px 14px calc(16px + var(--sb));}
+
+/* ── CONTROLS ── */
+.ctrl-row{display:flex;gap:6px;width:100%;max-width:380px;margin-bottom:10px;}
+.ctrl-btn{flex:1;padding:7px 4px;border:1px solid var(--line);border-radius:8px;
+  background:#fff;font-family:inherit;font-size:.68rem;cursor:pointer;
+  white-space:nowrap;transition:all .15s;}
+.ctrl-btn.active{background:var(--red);color:#fff;border-color:var(--red);}
+
+/* ── CARD ── */
+.srs-top{width:100%;max-width:380px;display:flex;justify-content:space-between;
+  margin-bottom:8px;font-size:.72rem;color:var(--muted);}
+.srs-queue{color:var(--red);font-weight:600;}
+
+.card{width:100%;max-width:380px;background:#fff;border-radius:14px;
+  box-shadow:0 3px 18px rgba(0,0,0,.1);padding:28px 20px;text-align:center;
+  min-height:160px;display:flex;flex-direction:column;justify-content:center;
+  gap:8px;cursor:pointer;-webkit-user-select:none;user-select:none;position:relative;}
+.card:active{transform:scale(.98);}
+.c-front{font-size:1.75rem;font-weight:700;color:var(--red);line-height:1.2;}
+.c-speak-btn{border:none;background:none;font-size:1.3rem;cursor:pointer;padding:2px 8px;margin:-4px auto 0;}
+.c-hint{font-size:.72rem;color:var(--muted);}
+.c-back{display:none;flex-direction:column;gap:4px;align-items:center;}
+.c-meaning{font-size:.95rem;font-weight:500;}
+.c-note{font-size:.7rem;color:var(--blue);}
+.c-meta{font-size:.62rem;color:var(--muted);}
+.card.flipped .c-hint{display:none;}
+.card.flipped .c-back{display:flex;}
+
+/* ── SRS BUTTONS ── */
+.srs-btns{display:none;grid-template-columns:repeat(4,1fr);gap:6px;
+  width:100%;max-width:380px;margin-top:10px;}
+.srs-btns.on{display:grid;}
+.sb{border:none;border-radius:10px;padding:10px 4px;font-family:inherit;
+  font-size:.7rem;font-weight:600;cursor:pointer;display:flex;
+  flex-direction:column;align-items:center;gap:1px;}
+.sb:active{transform:scale(.95);}
+.iv{font-size:.58rem;font-weight:400;opacity:.85;}
+.sb0{background:#e74c3c;color:#fff;}
+.sb1{background:#e67e22;color:#fff;}
+.sb2{background:var(--green);color:#fff;}
+.sb3{background:#2980b9;color:#fff;}
+.skip-btn{margin-top:8px;border:none;background:none;color:var(--muted);
+  font-family:inherit;font-size:.75rem;cursor:pointer;padding:4px 8px;}
+
+/* ── DONE ── */
+.done{width:100%;max-width:380px;background:#fff;border-radius:14px;
+  padding:28px 20px;text-align:center;box-shadow:0 3px 18px rgba(0,0,0,.08);display:none;}
+.done-em{font-size:2.2rem;margin-bottom:8px;}
+.done-t{font-size:1rem;font-weight:600;margin-bottom:6px;}
+.done-s{font-size:.75rem;color:var(--muted);margin-bottom:14px;}
+.done-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:14px;}
+.dg{background:var(--paper);border-radius:8px;padding:9px 4px;}
+.dg .n{font-size:1.2rem;font-weight:700;color:var(--red);}
+.dg .l{font-size:.62rem;color:var(--muted);margin-top:1px;}
+.cont-btn{padding:11px 24px;background:var(--red);color:#fff;border:none;
+  border-radius:10px;font-family:inherit;font-size:.82rem;font-weight:500;cursor:pointer;}
+
+/* ── LIST ── */
+.sbar{position:sticky;top:0;background:var(--paper);padding:9px 12px;
+  border-bottom:1px solid var(--line);display:flex;gap:8px;z-index:5;}
+.sbar input{flex:1;border:1px solid var(--line);background:#fff;
+  padding:7px 10px;border-radius:8px;font-size:.85rem;font-family:inherit;}
+.cnt{background:var(--red);color:#fff;font-size:.65rem;padding:2px 7px;
+  border-radius:10px;white-space:nowrap;}
+.wi{display:flex;align-items:flex-start;padding:10px 12px;
+  border-bottom:1px solid var(--line);gap:8px;}
+.wi.due{background:#fff9e6;}
+.wi-b{flex:1;min-width:0;}
+.wi-v{font-size:.9rem;font-weight:600;}
+.wi-m{font-size:.74rem;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:1px;}
+.wi-n{font-size:.66rem;color:var(--blue);margin-top:1px;}
+.wi-meta{font-size:.62rem;color:var(--muted);margin-top:1px;}
+.wi-ac{display:flex;gap:4px;flex-shrink:0;}
+.ib{border:none;background:none;font-size:.9rem;padding:4px 5px;color:var(--muted);cursor:pointer;}
+.ib:active{transform:scale(.9);}
+
+/* ── STATS ── */
+.sc{background:#fff;border-radius:12px;margin:10px 12px;padding:14px;box-shadow:0 2px 8px rgba(0,0,0,.06);}
+.sc h3{font-size:.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;}
+.sg{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;}
+.si .n{font-size:1.4rem;font-weight:700;color:var(--red);}
+.si .l{font-size:.68rem;color:var(--muted);}
+.bar-w{margin-top:4px;}
+.bar-l{display:flex;justify-content:space-between;font-size:.67rem;color:var(--muted);margin-bottom:3px;}
+.bar-bg{background:var(--line);border-radius:4px;height:7px;overflow:hidden;}
+.bar-f{height:100%;border-radius:4px;}
+.exp-btn{width:100%;padding:12px;background:var(--green);color:#fff;border:none;
+  border-radius:10px;font-family:inherit;font-size:.83rem;font-weight:500;cursor:pointer;margin-bottom:4px;}
+
+/* ── PENDING/ADD ── */
+.pw{padding:10px 12px;}
+.pi{background:#fff;border-radius:10px;padding:11px;margin-bottom:8px;border:1px solid var(--line);}
+.pi-v{font-size:.92rem;font-weight:600;}
+.pi-m{font-size:.78rem;color:var(--muted);margin-top:2px;}
+.pi-n{font-size:.67rem;color:var(--blue);margin-top:2px;}
+.pi-ac{display:flex;gap:5px;margin-top:8px;}
+.pb{flex:1;padding:7px 4px;border:none;border-radius:7px;font-family:inherit;font-size:.72rem;font-weight:500;cursor:pointer;}
+.pb.ok{background:var(--green);color:#fff;}
+.pb.ed{background:var(--line);color:var(--ink);}
+.pb.dl{background:#c0392b;color:#fff;}
+.as{background:#fff;border-radius:10px;margin:4px 12px 10px;padding:13px;border:1px solid var(--line);}
+.as h3{font-size:.82rem;font-weight:600;margin-bottom:9px;}
+.fl{margin-bottom:7px;}
+.fl label{display:block;font-size:.68rem;color:var(--muted);margin-bottom:3px;}
+.fl input{width:100%;border:1px solid var(--line);background:var(--paper);
+  padding:8px 10px;border-radius:7px;font-size:.86rem;font-family:inherit;}
+.add-btn{width:100%;padding:11px;background:var(--red);color:#fff;border:none;
+  border-radius:8px;font-family:inherit;font-size:.83rem;font-weight:500;cursor:pointer;}
+
+/* ── MODAL ── */
+.ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:300;
+  justify-content:center;align-items:center;padding:20px;}
+.ov.on{display:flex;}
+.mo{background:var(--paper);border-radius:14px;padding:18px;width:100%;
+  max-width:320px;display:flex;flex-direction:column;gap:9px;}
+.mo h3{font-size:.9rem;font-weight:600;}
+.mo input{width:100%;border:1px solid var(--line);background:#fff;
+  padding:8px 10px;border-radius:8px;font-size:.86rem;font-family:inherit;}
+.mo-ac{display:flex;gap:7px;}
+.mo-ac button{flex:1;padding:10px;border:none;border-radius:8px;font-family:inherit;font-size:.8rem;cursor:pointer;}
+.m-ok{background:var(--red);color:#fff;}
+.m-cl{background:var(--line);}
+</style>
+</head>
+<body>
+<header>
+  <div class="h-row"><span class="h-title">Từ Vựng</span><span class="h-sub">ベトナム語単語帳</span></div>
+  <div class="h-stats" id="hstats"></div>
+</header>
+<div class="tabs">
+  <button class="tab on" onclick="sv('srs',this)">📚 復習</button>
+  <button class="tab" onclick="sv('list',this)">一覧</button>
+  <button class="tab" onclick="sv('stats',this)">統計</button>
+  <button class="tab" onclick="sv('pend',this)">追加</button>
+  <button class="tab" onclick="sv('check',this)">検品</button>
+</div>
+<div id="pbanner"><span>⚠️</span><span id="pcnt">0</span>件 未確認</div>
+<div id="bbanner" onclick="quickSave()"><span id="bbicon">⚠️</span><span id="bbtxt"></span><span class="bb-act">今すぐ保存</span></div>
+
+<!-- SRS VIEW -->
+<div id="v-srs" class="view on vcenter">
+  <!-- Controls -->
+  <div class="ctrl-row">
+    <button id="btn-dir" class="ctrl-btn active" onclick="toggleDir()">🔄 ベト→日</button>
+    <button id="btn-rand" class="ctrl-btn" onclick="toggleRand()">🔀 ランダム</button>
+    <button id="btn-tts" class="ctrl-btn active" onclick="toggleTTS()">🔊 音声</button>
+  </div>
+  <!-- Progress -->
+  <div class="srs-top">
+    <span id="sprog"></span>
+    <span class="srs-queue" id="squeue"></span>
+  </div>
+  <!-- Flashcard -->
+  <div class="card" id="card" onclick="flip()">
+    <div style="position:absolute;top:10px;right:8px;display:flex;gap:4px;">
+      <button onclick="editCurrent(event)" style="border:none;background:none;font-size:.9rem;color:var(--muted);cursor:pointer;padding:4px;">✏️</button>
+      <button onclick="delCurrent(event)" style="border:none;background:none;font-size:.9rem;color:#c0392b;cursor:pointer;padding:4px;opacity:.6;">🗑️</button>
+    </div>
+    <div class="c-front" id="cfront"></div>
+    <button class="c-speak-btn" onclick="speakFront(event)">🔊</button>
+    <div class="c-hint" id="chint">タップして意味を確認</div>
+    <div class="c-back" id="cback">
+      <div class="c-meaning" id="cmean"></div>
+      <button style="border:none;background:none;font-size:1rem;cursor:pointer;" onclick="speakBack(event)">🔊</button>
+      <div class="c-note" id="cnote"></div>
+      <div class="c-meta" id="cmeta"></div>
+    </div>
+  </div>
+  <!-- SRS rate buttons -->
+  <div class="srs-btns" id="btns">
+    <button class="sb sb0" onclick="rate(0)">もう一度<span class="iv" id="iv0"></span></button>
+    <button class="sb sb1" onclick="rate(1)">難しい<span class="iv" id="iv1"></span></button>
+    <button class="sb sb2" onclick="rate(2)">覚えた<span class="iv" id="iv2"></span></button>
+    <button class="sb sb3" onclick="rate(3)">簡単<span class="iv" id="iv3"></span></button>
+  </div>
+  <div style="display:flex;gap:12px;align-items:center;margin-top:8px;">
+  <button class="skip-btn" id="skipbtn" onclick="skip()">スキップ →</button>
+  <button onclick="stopSession()" style="border:none;background:none;color:#c0392b;font-family:inherit;font-size:.75rem;cursor:pointer;padding:4px 8px;">■ 終了</button>
+</div>
+<!-- Similar words -->
+<div id="similar-box" style="width:100%;max-width:380px;background:#fff;border-radius:10px;
+  padding:10px 12px;box-shadow:0 2px 8px rgba(0,0,0,.07);margin-top:10px;
+  min-height:0;"></div>
+  <!-- Done screen -->
+  <div class="done" id="done">
+    <div class="done-em">🎉</div>
+    <div class="done-t" id="done-title">セッション完了！</div>
+    <div class="done-s" id="donesub"></div>
+    <div class="done-grid">
+      <div class="dg"><div class="n" id="da">0</div><div class="l">もう一度</div></div>
+      <div class="dg"><div class="n" id="dg2">0</div><div class="l">覚えた</div></div>
+      <div class="dg"><div class="n" id="dn">0</div><div class="l">新規</div></div>
+    </div>
+    <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:14px;">
+      <button class="cont-btn" onclick="initSRS(true)">🔁 次のセッション</button>
+      <button class="cont-btn" style="background:var(--blue);" onclick="freePlay()">📖 自由練習</button>
+    </div>
+    <!-- Session result log -->
+    <div id="session-log" style="text-align:left;border-top:1px solid var(--line);padding-top:12px;max-height:260px;overflow-y:auto;"></div>
+  </div>
+</div>
+
+<!-- LIST VIEW -->
+<div id="v-list" class="view">
+  <div class="sbar">
+    <input type="search" id="sinput" placeholder="検索…" oninput="renderList()" autocomplete="off">
+    <span class="cnt" id="lcnt">0</span>
+  </div>
+  <div id="wlist"></div>
+</div>
+
+<!-- STATS VIEW -->
+<div id="v-stats" class="view"><div id="swrap"></div></div>
+
+<!-- PENDING/ADD VIEW -->
+<div id="v-pend" class="view">
+  <div class="pw">
+    <div id="approve-all-wrap" style="display:none;padding:0 0 8px;">
+      <button onclick="approveAll()" style="width:100%;padding:10px;background:var(--green);color:#fff;border:none;border-radius:9px;font-family:inherit;font-size:.8rem;font-weight:500;cursor:pointer;">✓ 全て承認（一括）</button>
+    </div>
+    <div id="plist"></div>
+  </div>
+  <div class="as">
+    <h3>📋 貼り付けて一括登録</h3>
+    <div style="font-size:.7rem;color:#666;line-height:1.6;margin-bottom:6px;">
+      1行1語。<code>ベト語 / 意味 / メモ</code>、タブ区切り、JSON配列のいずれも読み取ります。
+      貼り付けが使えない環境では「ファイルから読み込む」を使ってください。
+    </div>
+    <textarea id="bulk-in" class="bulk-ta" placeholder="cảm ơn / ありがとう&#10;xin lỗi&#9;ごめんなさい"></textarea>
+    <div class="bulk-row">
+      <button onclick="bulkParse()" style="background:#2980b9;">解析する</button>
+      <button onclick="document.getElementById('bulk-file-input').click()" style="background:#7d3c98;">ファイルから読み込む</button>
+    </div>
+    <div class="bulk-row">
+      <button onclick="bulkPrompt()" style="background:#566573;">AI用プロンプトを書き出す</button>
+    </div>
+    <div id="bulk-prev"></div>
+  </div>
+
+  <div class="as">
+    <h3>＋ 単語を追加</h3>
+    <div class="fl"><label>ベトナム語</label><input id="av" placeholder="xin chào" autocomplete="off"></div>
+    <div class="fl"><label>意味</label><input id="am" placeholder="こんにちは / hello" autocomplete="off"></div>
+    <div class="fl"><label>メモ（任意）</label><input id="an" placeholder="例文・備考" autocomplete="off"></div>
+    <button class="add-btn" onclick="madd()">追加する</button>
+  </div>
+</div>
+
+<div id="v-check" class="view">
+  <div class="pw"><div id="ckwrap"></div></div>
+</div>
+
+<!-- Floating save button -->
+<button id="float-save" onclick="quickSave()"
+  style="position:fixed;bottom:calc(20px + env(safe-area-inset-bottom));right:16px;
+  width:48px;height:48px;border-radius:50%;background:var(--green);color:white;
+  border:none;font-size:1.3rem;cursor:pointer;z-index:100;
+  box-shadow:0 3px 12px rgba(0,0,0,.25);display:flex;align-items:center;justify-content:center;"
+  title="履歴を保存">💾</button>
+
+<!-- Confirm Modal -->
+<div class="ov" id="confirm-ov">
+  <div class="mo">
+    <div id="confirm-msg" style="font-size:.85rem;line-height:1.6;margin-bottom:12px;white-space:pre-wrap;"></div>
+    <div class="mo-ac">
+      <button class="m-cl" id="confirm-cancel">キャンセル</button>
+      <button style="flex:1;padding:10px;border:none;border-radius:8px;font-family:inherit;font-size:.8rem;cursor:pointer;background:#c0392b;color:#fff;" id="confirm-ok">削除</button>
+    </div>
+  </div>
+</div>
+
+<!-- State import input (hidden) -->
+<input type="file" id="ai-file-input" accept=".json,.txt,text/plain,application/json" style="display:none"
+  onchange="if(this.files[0]){readTextFile(this.files[0],t=>{document.getElementById('ai-in').value=t;aiApply();});this.value='';}">
+<input type="file" id="bulk-file-input" accept=".json,.txt,.csv,text/plain,application/json" style="display:none"
+  onchange="if(this.files[0]){readTextFile(this.files[0],t=>{document.getElementById('bulk-in').value=t;bulkParse();});this.value='';}">
+<input type="file" id="state-import-input" accept=".json" style="display:none"
+  onchange="if(this.files[0]){importState(this.files[0]);this.value='';}">
+
+<!-- Raw State Modal (fallback when the share sheet is blocked) -->
+<div class="ov" id="rov">
+  <div class="mo" style="max-width:520px;">
+    <h3>バックアップJSON</h3>
+    <div style="font-size:.72rem;line-height:1.6;color:#666;margin-bottom:8px;">
+      共有シートが使えない環境用の退避手段です。全選択してコピーし、メモアプリ等に貼り付けて保管してください。
+    </div>
+    <textarea id="rjson" readonly
+      style="width:100%;height:180px;border:1px solid var(--line);border-radius:8px;
+             padding:8px;font-size:.6rem;font-family:ui-monospace,Menlo,monospace;
+             background:#fff;white-space:pre;overflow:auto;"></textarea>
+    <div id="rsize" style="font-size:.68rem;color:#888;margin:6px 0 8px;"></div>
+    <div class="mo-ac">
+      <button class="m-cl" onclick="closeRaw()">閉じる</button>
+      <button class="m-ok" onclick="copyRaw()" style="background:var(--green);">全選択してコピー</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Modal -->
+<div class="ov" id="eov">
+  <div class="mo">
+    <h3>単語を編集</h3>
+    <input id="ev" placeholder="ベトナム語" autocomplete="off">
+    <input id="em" placeholder="意味" autocomplete="off">
+    <input id="en" placeholder="メモ" autocomplete="off">
+    <div class="mo-ac">
+      <button class="m-cl" onclick="closeM()">キャンセル</button>
+      <button class="m-ok" onclick="saveM()">保存</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════
+// DATA
+// ═══════════════════════════════════════════════════
+// Word data lives only in the state JSON now — RAW is empty so this file can
+// sit on a public host without exposing the vocabulary or personal notes.
+const RAW = [];
+let words = RAW.map(r => ({
+  id: r.id,
+  viet: r.v,
+  meaning: r.m,
+  note: r.n || '',
+  confirmed: true  // all words start confirmed; deleted/unconfirmed managed via state
+}));
+let nid = 4000;
+const DELETED_IDS = new Set();
+
+// ═══════════════════════════════════════════════════
+// SETTINGS
+// ═══════════════════════════════════════════════════
+const MAX_NEW = 50;      // daily new card limit
+const SESSION_SIZE = 20; // cards per session
+let DIR  = 'viet2jp'; // 'viet2jp' | 'jp2viet'
+let RAND = false;
+let TTS  = true;
+
+function toggleDir() {
+  DIR = DIR === 'viet2jp' ? 'jp2viet' : 'viet2jp';
+  const btn = document.getElementById('btn-dir');
+  btn.textContent = DIR === 'viet2jp' ? '🔄 ベト→日' : '🔄 日→ベト';
+  btn.classList.toggle('active', true);
+  initSRS();
+}
+function toggleRand() {
+  RAND = !RAND;
+  const btn = document.getElementById('btn-rand');
+  btn.textContent = RAND ? '🔀 ランダム✓' : '🔀 ランダム';
+  btn.classList.toggle('active', RAND);
+  initSRS();
+}
+function toggleTTS() {
+  TTS = !TTS;
+  const btn = document.getElementById('btn-tts');
+  btn.textContent = TTS ? '🔊 音声' : '🔇 音声';
+  btn.classList.toggle('active', TTS);
+  if (!TTS) window.speechSynthesis && window.speechSynthesis.cancel();
+}
+
+// ═══════════════════════════════════════════════════
+// TTS
+// ═══════════════════════════════════════════════════
+// ── Auto-detect language & multi-segment TTS ──
+function detectLang(text) {
+  if (!text) return 'vi-VN';
+  const t = text.trim();
+  // Japanese
+  if (/[぀-ゟ゠-ヿ一-鿿]/.test(t)) return 'ja-JP';
+  // Vietnamese tone/special chars
+  if (/[àáâãèéêìíòóôõùúýăđơưạảấầẩẫậắằẳẵặẹẻẽếềểễệỉịọỏốồổỗộớờởỡợụủứừửữựỳỷỹỵ]/i.test(t))
+    return 'vi-VN';
+  // English common words first
+  if (/(the|and|for|are|but|not|you|all|can|was|one|our|get|has|how|new|now|old|see|two|way|who|did|its|let|say|she|too|use|able|about|after|also|back|been|call|come|could|does|down|each|even|find|from|give|good|have|here|high|into|just|keep|know|last|left|life|like|live|long|look|make|many|more|most|move|much|must|name|need|never|next|only|open|over|part|place|play|right|same|seem|show|some|still|such|take|than|that|their|them|then|there|these|they|this|time|turn|very|well|went|were|what|when|where|which|while|will|with|word|work|would|year|your|his|her|him|they|we|he|she|is|am|be|do|go|to|of|in|on|at|by|up|as|an|a)/i.test(t))
+    return 'en-US';
+  // Vietnamese-exclusive patterns
+  if (/ngh|nh[aeiou]|[aeiou]nh|kh[aeiou]|gi[aeiou]|nuoc|khong|nhung|nhieu|duoc|trong|minh|anh|em|chi|con|cua/i.test(t))
+    return 'vi-VN';
+  return 'en-US';
+}
+
+// Split mixed-language text into segments
+function splitSegments(text) {
+  if (!text) return [];
+  // Split on " / " or " - " or ","
+  const parts = text.split(/\s*[\/,]\s*/).map(p => p.trim()).filter(Boolean);
+  if (parts.length <= 1) return [{ text, lang: detectLang(text) }];
+  return parts.map(p => ({ text: p, lang: detectLang(p) }));
+}
+
+// Speak with multi-language segment support
+function speakSegments(text) {
+  if (!TTS || !window.speechSynthesis) return;
+  window.speechSynthesis.cancel();
+  const segs = splitSegments(text);
+  let idx = 0;
+  function next() {
+    if (idx >= segs.length) return;
+    const s = segs[idx++];
+    const u = new SpeechSynthesisUtterance(s.text);
+    u.lang = s.lang; u.rate = 0.85; u.pitch = 1.0;
+    u.onend = next;
+    window.speechSynthesis.speak(u);
+  }
+  next();
+}
+
+function speak(text, lang) {
+  if (!TTS || !window.speechSynthesis) return;
+  window.speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = lang || detectLang(text);
+  u.rate = 0.85; u.pitch = 1.0;
+  window.speechSynthesis.speak(u);
+}
+
+function speakFront(text, lang) {
+  if (!TTS || !window.speechSynthesis) return;
+  window.speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = lang || detectLang(text);
+  u.rate = 0.85; u.pitch = 1.0;
+  window.speechSynthesis.speak(u);
+}
+function speakFront(e) {
+  e && e.stopPropagation();
+  if (!curWord) return;
+  const txt = DIR === 'viet2jp' ? curWord.viet : curWord.meaning;
+  // Front is usually single-language, use simple speak
+  speak(txt, detectLang(txt));
+}
+function speakBack(e) {
+  e && e.stopPropagation();
+  if (!curWord) return;
+  const txt = DIR === 'viet2jp' ? curWord.meaning : curWord.viet;
+  // Back may be multi-language (e.g. "説明する / Explain")
+  speakSegments(txt);
+}
+
+// ═══════════════════════════════════════════════════
+// SRS STORAGE — sessionStorage + URL hash
+// sessionStorage: survives reload, lost on tab close
+// URL hash: encodes confirmed/deleted IDs compactly
+// Works on edge://external-file, file://, all browsers
+// ═══════════════════════════════════════════════════
+const MEM = {};
+let DB = null;
+
+// ── Persistent state: sessionStorage (reload) + localStorage base64 (reopen) ──
+
+const STATE_KEY = 'tuVung_v1';
+
+function buildStateObj() {
+  const srsData = {};
+  words.forEach(w => { const s = MEM['s'+w.id]; if(s) srsData[w.id]=s; });
+  // v:2 — includes full word data so HTML updates don't lose custom words
+  return {
+    v: 2,
+    ts: Date.now(),
+    words: words.map(w => ({ id:w.id, v:w.viet, m:w.meaning, n:w.note||'', ok:w.confirmed, q:w.q?1:0, f:w.f?1:0 })),
+    d: Array.from(DELETED_IDS),
+    s: srsData,
+    nn: { k: todayKey(), n: getNNew() },
+    le: MEM['le'] || 0,
+    ab: MEM['ab'] || []
+  };
+}
+
+function applyStateObj(state) {
+  if (!state || !state.v) return false;
+  try {
+    if (state.v >= 2 && state.words && state.words.length > 0) {
+      // v2: restore full word list from JSON
+      // Merge: start from RAW, add/update with saved words (preserves new HTML words too)
+      const savedMap = new Map(state.words.map(w => [w.id, w]));
+      const rawIds = new Set(RAW.map(r => r.id));
+      // Base: RAW words
+      const merged = RAW.map(r => {
+        const saved = savedMap.get(r.id);
+        if (saved) return { id:r.id, viet:saved.v, meaning:saved.m, note:saved.n||'', confirmed:!!saved.ok, q:!!saved.q, f:!!saved.f };
+        return { id:r.id, viet:r.v, meaning:r.m, note:r.n||'', confirmed:true };
+      });
+      // Add user-added words (id not in RAW)
+      state.words.forEach(w => {
+        if (!rawIds.has(w.id)) {
+          merged.push({ id:w.id, viet:w.v, meaning:w.m, note:w.n||'', confirmed:!!w.ok, q:!!w.q, f:!!w.f });
+        }
+      });
+      words = merged;
+      // Apply deletions
+      if (state.d) { state.d.forEach(id => DELETED_IDS.add(+id)); words = words.filter(w=>!DELETED_IDS.has(w.id)); }
+    } else {
+      // v1 legacy: words stay as RAW
+      if (state.d) { state.d.forEach(id => DELETED_IDS.add(+id)); words = words.filter(w=>!DELETED_IDS.has(w.id)); }
+      if (state.c) { const ids=new Set(state.c.map(Number)); words.forEach(w=>{if(ids.has(w.id))w.confirmed=true;}); }
+    }
+    if (state.s) { Object.entries(state.s).forEach(([id,s])=>{MEM['s'+id]=s;}); }
+    if (state.nn && state.nn.k === todayKey()) MEM['nn'+todayKey()] = state.nn.n;
+    if (state.le) MEM['le'] = state.le;
+    if (state.ab) MEM['ab'] = state.ab;
+    return true;
+  } catch(e) { return false; }
+}
+
+// ── Save status tracking ──
+let _saveOk = false;   // true = at least one successful localStorage save this session
+let _lastSaveTs = 0;   // timestamp of last successful save
+
+function stateSave() {
+  const obj = buildStateObj();
+  const json = JSON.stringify(obj);
+  let saved = false;
+
+  // 1. localStorage (primary — survives tab close)
+  try {
+    localStorage.setItem(STATE_KEY, btoa(unescape(encodeURIComponent(json))));
+    saved = true;
+  } catch(e) {}
+
+  // 2. sessionStorage (reload fallback)
+  try { sessionStorage.setItem(STATE_KEY, json); } catch(e) {}
+
+  // (The old URL-hash fallback was removed: it referenced obj.c, which the v2
+  //  state object no longer has, so it threw on every single save.)
+
+  if (saved) {
+    _saveOk = true;
+    _lastSaveTs = Date.now();
+  }
+  updSaveIcon();
+  return saved;
+}
+
+function stateLoad() {
+  // 1. localStorage (most persistent)
+  try {
+    const b64 = localStorage.getItem(STATE_KEY);
+    if (b64) {
+      const raw = decodeURIComponent(escape(atob(b64)));
+      const s = JSON.parse(raw);
+      if (applyStateObj(s)) { _saveOk = true; _lastSaveTs = s.ts || 0; return 'local'; }
+    }
+  } catch(e) {}
+
+  // 2. sessionStorage (reload within same tab)
+  try {
+    const raw = sessionStorage.getItem(STATE_KEY);
+    if (raw) { const s=JSON.parse(raw); if(applyStateObj(s)) { _saveOk = true; return 'session'; } }
+  } catch(e) {}
+
+  return null;
+}
+
+// Auto-save on every meaningful change
+function hashSave() { stateSave(); }
+function saveConfirmed() { stateSave(); }
+function saveDeleted() { stateSave(); }
+
+// Export JSON file (manual backup)
+// Fixed filename so iOS Files app always saves to same location
+// (iOS: on second save, it asks "Replace?" which is one tap)
+const STATE_FILENAME = 'tuVung_state.json';
+
+// Shared save routine: tries the native Share Sheet first (works reliably in
+// iOS Safari/WebView and lets the user pick "Save to Files" → iCloud Drive),
+// then falls back to a Blob download link, then to opening the JSON in a
+// new tab as a last resort. The old data:-URI + <a download> approach is
+// unreliable in iOS WebViews (download attribute is often ignored for
+// data: URIs), which is why the buttons appeared "dead".
+// Share arbitrary text as a file. Used wherever the clipboard is unavailable —
+// some managed browsers block copy/paste to other apps but still allow the
+// share sheet, which is how the state backup already leaves the device.
+async function shareTextFile(filename, mime, text, toastMsg) {
+  const blob = new Blob([text], { type: mime });
+  try {
+    const file = new File([blob], filename, { type: mime });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      await navigator.share({ files: [file], title: filename });
+      showToast(toastMsg);
+      return true;
+    }
+  } catch (e) {
+    if (e && e.name === 'AbortError') return false;
+  }
+  try {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = filename; a.style.display = 'none';
+    document.body.appendChild(a); a.click();
+    setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 1000);
+    showToast(toastMsg);
+    return true;
+  } catch (e) {}
+  showToast('⚠️ ファイル出力に失敗しました');
+  return false;
+}
+
+async function saveStateFile(toastMsg) {
+  const obj = buildStateObj();
+  const json = JSON.stringify(obj, null, 2);
+  const blob = new Blob([json], { type: 'application/json' });
+
+  // 1) Native share sheet (best on iOS: user taps "Save to Files" → iCloud Drive)
+  try {
+    const file = new File([blob], STATE_FILENAME, { type: 'application/json' });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      await navigator.share({ files: [file], title: STATE_FILENAME });
+      markExported();
+      showToast(toastMsg);
+      return;
+    }
+  } catch (e) {
+    // user cancelled the share sheet, or share failed — fall through
+    if (e && e.name === 'AbortError') return; // user cancelled; don't also try fallback
+  }
+
+  // 2) Blob URL + <a download> (works in most non-iOS browsers)
+  try {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = STATE_FILENAME;
+    a.style.display = 'none';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 1000);
+    markExported();
+    showToast(toastMsg);
+    return;
+  } catch (e) {}
+
+  // 3) Last resort: open JSON in a new tab so it can be shared/saved manually
+  const url = URL.createObjectURL(blob);
+  window.open(url, '_blank');
+  showToast('📥 開いたページの共有ボタンから保存してください');
+}
+
+function quickSave() {
+  saveStateFile('📥 保存先: iCloud Drive → TV を選択してください');
+}
+
+// ── ID counter ──
+// nid must always sit above every id in use. importState() used to be the only
+// place this happened, so a normal localStorage start-up left nid at 4000 and
+// newly added words collided with words added in an earlier session.
+function syncNid() {
+  const maxId = words.reduce((m, w) => Math.max(m, w.id), 3999);
+  nid = maxId + 1;
+}
+
+// ── Backup freshness ──
+const BACKUP_WARN_DAYS = 3;
+
+function markExported() {
+  MEM['le'] = Date.now();
+  stateSave();
+  updBackupBanner();
+}
+
+function daysSinceExport() {
+  const le = MEM['le'] || 0;
+  if (!le) return null;
+  return Math.floor((Date.now() - le) / MDAY);
+}
+
+function updBackupBanner() {
+  const b = document.getElementById('bbanner');
+  if (!b) return;
+  const d = daysSinceExport();
+  let show = true, danger = false, icon = '⚠️', txt = '';
+
+  if (d === null) {
+    danger = true;
+    txt = 'まだ一度もバックアップしていません';
+  } else if (d >= BACKUP_WARN_DAYS) {
+    danger = true;
+    txt = `最終バックアップから ${d} 日経過`;
+  } else if (d >= 1) {
+    txt = `最終バックアップから ${d} 日経過`;
+  } else {
+    show = false;
+  }
+
+  b.classList.toggle('on', show);
+  b.classList.toggle('danger', danger);
+  if (show) {
+    document.getElementById('bbicon').textContent = icon;
+    document.getElementById('bbtxt').textContent  = txt;
+  }
+}
+
+// ── Raw JSON escape hatch ──
+// If an MDM policy blocks the share sheet and blob downloads, this is the only
+// way left to get the data off the device: show it and let the user copy it.
+function showRawState() {
+  const json = JSON.stringify(buildStateObj());
+  const ta = document.getElementById('rjson');
+  ta.value = json;
+  const kb = Math.round(json.length / 1024);
+  document.getElementById('rsize').textContent =
+    `${words.length}語 / 約${kb}KB — コピー後は必ずファイルとして保管してください`;
+  document.getElementById('rov').classList.add('on');
+}
+
+function closeRaw() { document.getElementById('rov').classList.remove('on'); }
+
+function copyRaw() {
+  const ta = document.getElementById('rjson');
+  ta.removeAttribute('readonly');
+  ta.focus();
+  ta.setSelectionRange(0, ta.value.length);
+  let ok = false;
+  try {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(ta.value);
+      ok = true;
+    } else {
+      ok = document.execCommand('copy');
+    }
+  } catch (e) {}
+  ta.setAttribute('readonly', '');
+  if (ok) { markExported(); showToast('✅ コピーしました — 必ず保管してください'); }
+  else    { showToast('⚠️ 自動コピー不可 — 選択範囲を長押しして「コピー」'); }
+}
+
+function exportState() {
+  saveStateFile('📥 履歴を保存しました');
+}
+
+// Import JSON file (manual restore)
+function importState(file) {
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const state = JSON.parse(e.target.result);
+      // Reset
+      DELETED_IDS.clear();
+      words = RAW.map(r=>({id:r.id,viet:r.v,meaning:r.m,note:r.n||'',confirmed:true}));
+      Object.keys(MEM).forEach(k=>{ if(k.startsWith('s')||k.startsWith('nn')) delete MEM[k]; });
+      if (!applyStateObj(state)) throw new Error('invalid');
+      // Update nid to avoid ID collisions with user-added words
+      syncNid();
+      stateSave();
+      updHdr(); initSRS();
+      const dt = new Date(state.ts).toLocaleDateString('ja-JP');
+      const wc = state.words ? state.words.length : '?';
+      showToast(`✅ 復元完了 — ${wc}語 (${dt})`);
+    } catch(err) { showToast('❌ 読み込み失敗'); }
+  };
+  reader.readAsText(file);
+}
+
+// Dummy DB functions
+// Dummy DB functions (kept for compatibility)
+function openDB() { return Promise.resolve(false); }
+function idbSet() {}
+function loadAllFromDB() { return Promise.resolve(); }
+
+function sGet(id) { return MEM['s'+id]||null; }
+function sSet(id,d) { MEM['s'+id]=d; stateSave(); }
+function todayKey() { return new Date().toDateString(); }
+function getNNew() { return MEM['nn'+todayKey()]||0; }
+function setNNew(n) { MEM['nn'+todayKey()]=n; stateSave(); }
+
+// ═══════════════════════════════════════════════════
+// SM-2 ALGORITHM
+// ═══════════════════════════════════════════════════
+const MDAY = 86400000, MMIN = 60000;
+
+function sm2(s, q) {
+  let { interval: iv = 0, ef = 2.5, reps = 0, lapses = 0 } = s || {};
+  let ni;
+  if (q === 0) {
+    lapses++; reps = 0; ni = 1; ef = Math.max(1.3, ef - 0.2);
+  } else {
+    const d = { 1: -0.15, 2: 0, 3: 0.1 }[q];
+    ef = Math.max(1.3, ef + d);
+    if (reps === 0) ni = 1;
+    else if (reps === 1) ni = 6;
+    else ni = Math.round(iv * ef);
+    if (q === 3) ni = Math.round(ni * 1.3);
+    reps++;
+  }
+  return { interval: ni, ef: Math.round(ef * 100) / 100, reps, lapses,
+    due: Date.now() + ni * (q === 0 ? MMIN : MDAY), last: Date.now() };
+}
+
+function ivLabel(s, q) {
+  const ms = sm2(s, q).due - Date.now();
+  if (ms < 3600000) return Math.round(ms / 60000) + '分';
+  if (ms < MDAY)    return Math.round(ms / 3600000) + '時間';
+  return Math.round(ms / MDAY) + '日';
+}
+
+// ═══════════════════════════════════════════════════
+// SRS SESSION
+// ═══════════════════════════════════════════════════
+let Q = [], qi = 0, curWord = null;
+let ss = { again: 0, good: 0, neu: 0 };
+let sessionLog = []; // [{word, rating, isNew}]
+
+function buildQueue(bypassLimit = false) {
+  const now = Date.now();
+  const conf = words.filter(w => w.confirmed);
+  // Due cards (sorted by overdue amount)
+  let due = conf
+    .filter(w => { const s = sGet(w.id); return s && s.due <= now; })
+    .sort((a, b) => sGet(a.id).due - sGet(b.id).due);
+  // New cards
+  const nnew = getNNew();
+  const rem  = bypassLimit ? SESSION_SIZE : Math.max(0, MAX_NEW - nnew);
+  let unStudied = conf.filter(w => !sGet(w.id));
+  unStudied = unStudied.sort(() => Math.random() - 0.5).slice(0, rem);
+  // Combine
+  let q = [...due, ...unStudied];
+  if (RAND) q = q.sort(() => Math.random() - 0.5);
+  return q.slice(0, SESSION_SIZE);
+}
+
+function initSRS(bypassLimit = false) {
+  window.speechSynthesis && window.speechSynthesis.cancel();
+  Q = buildQueue(bypassLimit); qi = 0; ss = { again: 0, good: 0, neu: 0 }; sessionLog = [];
+  document.getElementById('done').style.display = 'none';
+  document.getElementById('card').style.display = 'flex';
+  document.getElementById('skipbtn').parentElement.style.display = 'flex';
+  if (Q.length === 0) showDone();
+  else showCard();
+  updHdr();
+}
+
+function showCard() {
+  if (qi >= Q.length) { showDone(); return; }
+  curWord = Q[qi];
+  const s = sGet(curWord.id);
+  const isNew = !s;
+
+  // Direction-aware front/back
+  const front = DIR === 'viet2jp' ? curWord.viet    : curWord.meaning;
+  const back  = DIR === 'viet2jp' ? curWord.meaning : curWord.viet;
+
+  document.getElementById('cfront').textContent = front;
+  document.getElementById('cmean').textContent  = back;
+  document.getElementById('cnote').textContent  = curWord.note || '';
+  document.getElementById('cnote').style.display = curWord.note ? '' : 'none';
+  document.getElementById('cmeta').textContent  = s
+    ? `間隔${s.interval}日 EF${s.ef} 復習${s.reps}回` : '🆕 新規';
+  document.getElementById('chint').textContent  =
+    DIR === 'viet2jp' ? 'タップして意味を確認' : 'タップしてベトナム語を確認';
+
+  // Progress
+  const now = Date.now();
+  document.getElementById('sprog').textContent  = `${qi + 1} / ${Q.length}`;
+  const dueN  = words.filter(w => { const s2 = sGet(w.id); return s2 && s2.due <= now; }).length;
+  const newLeft = Math.max(0, MAX_NEW - getNNew());
+  document.getElementById('squeue').textContent = `要復習${dueN} 新規${newLeft}`;
+
+  // SRS interval previews
+  const tmp = s || {};
+  [0,1,2,3].forEach(q => {
+    document.getElementById('iv' + q).textContent = ivLabel(tmp, q);
+  });
+
+  // Reset card UI
+  document.getElementById('card').classList.remove('flipped');
+  document.getElementById('btns').classList.remove('on');
+
+  // Auto-speak front
+  setTimeout(() => speak(front, detectLang(front)), 300); // front: single lang
+
+  // Show similar words
+  renderSimilar(curWord);
+}
+
+function editDistance(a, b) {
+  a = a.toLowerCase(); b = b.toLowerCase();
+  const m = a.length, n = b.length;
+  const dp = Array.from({length:m+1}, (_,i) => Array.from({length:n+1}, (_,j) => i||j));
+  for (let i=1;i<=m;i++) for (let j=1;j<=n;j++)
+    dp[i][j] = a[i-1]===b[j-1] ? dp[i-1][j-1] : 1+Math.min(dp[i-1][j-1],dp[i-1][j],dp[i][j-1]);
+  return dp[m][n];
+}
+
+function commonWords(a, b) {
+  const wa = new Set(a.toLowerCase().split(/[\s,\/\-]+/).filter(w=>w.length>1));
+  const wb = b.toLowerCase().split(/[\s,\/\-]+/).filter(w=>w.length>1);
+  return wb.filter(w => wa.has(w)).length;
+}
+
+function renderSimilar(w) {
+  const el = document.getElementById('similar-box');
+  if (!el || !w) { if(el) el.innerHTML=''; return; }
+  const pool = words.filter(x => x.confirmed && x.id !== w.id);
+  const viet = w.viet.toLowerCase();
+  const mean = w.meaning.toLowerCase();
+
+  // Score: spelling similarity + meaning overlap
+  const scored = pool.map(x => {
+    const spellingDist = editDistance(viet, x.viet.toLowerCase());
+    const spellingMax  = Math.max(viet.length, x.viet.toLowerCase().length);
+    const spellingScore = spellingMax > 0 ? 1 - spellingDist/spellingMax : 0;
+    const meaningScore  = commonWords(mean, x.meaning) * 0.4;
+    return { x, score: spellingScore * 0.7 + meaningScore };
+  });
+
+  const similar = scored
+    .filter(s => s.score > 0.35)
+    .sort((a,b) => b.score - a.score)
+    .slice(0, 3);
+
+  if (!similar.length) { el.innerHTML = ''; return; }
+
+  el.innerHTML = '<div style="font-size:.62rem;color:var(--muted);margin-bottom:4px;">🔍 類似・混同注意 <span style="opacity:.6">（タップでカード表示）</span></div>'
+    + similar.map(s => {
+      const pct = Math.round(s.score * 100);
+      return `<div style="display:flex;align-items:center;gap:6px;padding:4px 0;
+        border-bottom:1px solid var(--line);cursor:pointer;-webkit-tap-highlight-color:rgba(0,0,0,.05);"
+        onclick="previewSimilar(${s.x.id}, event)">
+        <div style="flex:1;min-width:0;">
+          <span style="font-size:.8rem;font-weight:600;color:var(--red);">${esc(s.x.viet)}</span>
+          <span style="font-size:.7rem;color:var(--muted);margin-left:5px;">${esc(s.x.meaning.slice(0,25))}${s.x.meaning.length>25?'…':''}</span>
+        </div>
+        <span style="font-size:.6rem;color:var(--muted);">${pct}%</span>
+      </div>`;
+    }).join('');
+}
+
+function previewSimilar(id, e) {
+  e && e.stopPropagation();
+  const w = words.find(x => x.id === id);
+  if (!w) return;
+  speak(w.viet, detectLang(w.viet));
+
+  // Show preview overlay
+  const existing = document.getElementById('preview-ov');
+  if (existing) existing.remove();
+
+  const s = sGet(w.id);
+  const meta = s ? `間隔${s.interval}日 / 復習${s.reps}回` : '未学習';
+
+  const ov = document.createElement('div');
+  ov.id = 'preview-ov';
+  ov.style.cssText = `position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:400;
+    display:flex;align-items:center;justify-content:center;padding:20px;`;
+  ov.innerHTML = `
+    <div style="background:#fff;border-radius:16px;padding:24px 20px;width:100%;max-width:360px;
+      box-shadow:0 8px 32px rgba(0,0,0,.2);position:relative;">
+      <button onclick="document.getElementById('preview-ov').remove()" style="
+        position:absolute;top:10px;right:12px;border:none;background:none;
+        font-size:1.1rem;cursor:pointer;color:var(--muted);">✕</button>
+      <div style="text-align:center;padding:8px 0 16px;">
+        <div style="font-size:1.5rem;font-weight:700;color:var(--red);margin-bottom:8px;">${esc(w.viet)}</div>
+        <button onclick="speak('${w.viet.replace(/'/g,"\\'")}', detectLang('${w.viet.replace(/'/g,"\\'")}'))"
+          style="border:none;background:none;font-size:1rem;cursor:pointer;margin-bottom:8px;">🔊</button>
+        <div style="font-size:1rem;color:#333;margin-bottom:6px;">${esc(w.meaning)}</div>
+        ${w.note ? `<div style="font-size:.78rem;color:var(--muted);margin-top:4px;">📝 ${esc(w.note)}</div>` : ''}
+        <div style="font-size:.65rem;color:var(--muted);margin-top:8px;">${meta}</div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:4px;">
+        <button onclick="openM(${w.id});document.getElementById('preview-ov').remove()" style="
+          flex:1;padding:9px;border:none;border-radius:9px;background:#f0f0f0;
+          font-family:inherit;font-size:.78rem;cursor:pointer;">✏️ 編集</button>
+        <button onclick="delWord(${w.id});document.getElementById('preview-ov').remove()" style="
+          flex:1;padding:9px;border:none;border-radius:9px;background:#fde8e8;color:#c0392b;
+          font-family:inherit;font-size:.78rem;cursor:pointer;">🗑️ 削除</button>
+        <button onclick="document.getElementById('preview-ov').remove()" style="
+          flex:1;padding:9px;border:none;border-radius:9px;background:var(--red);color:#fff;
+          font-family:inherit;font-size:.78rem;font-weight:600;cursor:pointer;">閉じる</button>
+      </div>
+    </div>`;
+  ov.addEventListener('click', function(ev) { if(ev.target===ov) ov.remove(); });
+  document.body.appendChild(ov);
+}
+
+function flip() {
+  const c = document.getElementById('card');
+  if (c.classList.contains('flipped')) return;
+  c.classList.add('flipped');
+  document.getElementById('btns').classList.add('on');
+  speakBack(null);
+}
+
+function rate(q) {
+  if (qi >= Q.length || !curWord) return;
+  const s     = sGet(curWord.id);
+  const isNew = !s;
+  sSet(curWord.id, sm2(s, q));
+  if (q === 0) {
+    ss.again++;
+    // Re-insert at random position after current
+    const insertAt = qi + 1 + Math.floor(Math.random() * Math.max(1, Q.length - qi));
+    Q.splice(insertAt, 0, curWord);
+  } else {
+    ss.good++;
+  }
+  if (isNew) { const n = getNNew() + 1; setNNew(n); ss.neu++; }
+  // Track result for session log
+  sessionLog.push({ word: curWord, rating: q, isNew });
+  qi++;
+  updHdr();
+  showCard();
+}
+
+function skip() {
+  qi++;
+  if (qi >= Q.length) showDone();
+  else showCard();
+}
+
+function stopSession() {
+  // Force end session mid-way
+  showDone(true);
+}
+
+function showDone(stopped = false) {
+  window.speechSynthesis && window.speechSynthesis.cancel();
+  document.getElementById('card').style.display  = 'none';
+  document.getElementById('btns').classList.remove('on');
+  document.getElementById('skipbtn').parentElement.style.display = 'none';
+  document.getElementById('done').style.display  = 'block';
+
+  document.getElementById('done-title').textContent = stopped ? '学習を終了しました' : 'セッション完了！';
+
+  const now = Date.now();
+  const nd  = words
+    .filter(w => { const s = sGet(w.id); return s && s.due > now; })
+    .sort((a, b) => sGet(a.id).due - sGet(b.id).due);
+  let sub = '次の復習カードはありません';
+  if (nd.length > 0) {
+    const ms = sGet(nd[0].id).due - now;
+    const lb = ms < 3600000 ? Math.round(ms/60000) + '分後'
+             : ms < MDAY    ? Math.round(ms/3600000) + '時間後' : '明日以降';
+    sub = `次: ${lb}（${nd.length}件待機中）`;
+  }
+  document.getElementById('donesub').textContent = sub;
+  document.getElementById('da').textContent  = ss.again;
+  document.getElementById('dg2').textContent = ss.good;
+  document.getElementById('dn').textContent  = ss.neu;
+
+  // Auto-save on session end
+  const saved = stateSave();
+
+  // Render session log
+  renderSessionLog();
+
+  // Show iCloud backup button after session
+  const logEl = document.getElementById('session-log');
+  if (logEl && ss.good + ss.again + ss.neu > 0) {
+    const backupDiv = document.createElement('div');
+    backupDiv.style.cssText = 'margin-top:14px;text-align:center;';
+    backupDiv.innerHTML = `
+      <button onclick="quickSave()" style="
+        background:var(--green);color:#fff;border:none;border-radius:10px;
+        padding:10px 20px;font-size:.82rem;font-weight:600;cursor:pointer;width:100%;
+      ">☁️ iCloudにバックアップ保存</button>
+      <div style="font-size:.62rem;color:var(--muted);margin-top:5px;">
+        単語データ＋復習結果を含むJSONを保存 → iCloud Drive / TV に置いてください
+      </div>`;
+    logEl.appendChild(backupDiv);
+  }
+}
+
+const RATING_LABEL = ['もう一度','難しい','覚えた','簡単'];
+const RATING_COLOR = ['#e74c3c','#e67e22','#2e7d52','#2980b9'];
+
+function renderSessionLog() {
+  const el = document.getElementById('session-log');
+  if (!sessionLog.length) { el.innerHTML = ''; return; }
+
+  // Deduplicate: keep last rating per word
+  const seen = {};
+  sessionLog.forEach(e => { seen[e.word.id] = e; });
+  const entries = Object.values(seen);
+
+  const rows = entries.map(e => {
+    const badge = `<span style="display:inline-block;padding:1px 7px;border-radius:10px;
+      background:${RATING_COLOR[e.rating]};color:#fff;font-size:.62rem;font-weight:600;">
+      ${RATING_LABEL[e.rating]}</span>`;
+    const newBadge = e.isNew ? '<span style="font-size:.6rem;color:var(--blue);margin-left:4px;">NEW</span>' : '';
+    return `<div style="display:flex;align-items:center;gap:8px;padding:5px 0;
+      border-bottom:1px solid var(--line);font-size:.78rem;">
+      <div style="flex:1;min-width:0;">
+        <span style="font-weight:600;">${esc(e.word.viet)}</span>${newBadge}
+        <span style="color:var(--muted);margin-left:6px;">${esc(e.word.meaning.slice(0,30))}${e.word.meaning.length>30?'…':''}</span>
+      </div>
+      ${badge}
+    </div>`;
+  }).join('');
+
+  el.innerHTML = `<div style="font-size:.7rem;color:var(--muted);margin-bottom:8px;font-weight:600;">
+    今回の学習結果（${entries.length}件）</div>${rows}`;
+}
+
+// Free play: all confirmed words, ignoring SRS schedule
+function freePlay() {
+  const conf = words.filter(w => w.confirmed);
+  if (!conf.length) { showToast('単語がありません'); return; }
+  Q = [...conf].sort(() => RAND ? Math.random() - 0.5 : 0).slice(0, SESSION_SIZE);
+  qi = 0; ss = { again: 0, good: 0, neu: 0 }; sessionLog = [];
+  document.getElementById('done').style.display = 'none';
+  document.getElementById('card').style.display = 'flex';
+  document.getElementById('skipbtn').parentElement.style.display = 'flex';
+  showCard();
+  updHdr();
+}
+
+// ═══════════════════════════════════════════════════
+// VIEWS
+// ═══════════════════════════════════════════════════
+function sv(name, el) {
+  ['srs','list','stats','pend','check'].forEach(n => {
+    document.getElementById('v-' + n).classList.toggle('on', n === name);
+  });
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('on'));
+  if (el) el.classList.add('on');
+  if (name === 'srs')   initSRS();
+  else if (name === 'list')  renderList();
+  else if (name === 'stats') renderStats();
+  else if (name === 'pend')  renderPend();
+  else if (name === 'check') renderCheck();
+}
+
+// ═══════════════════════════════════════════════════
+// LIST VIEW
+// ═══════════════════════════════════════════════════
+// Normalize Vietnamese diacritics to plain ASCII for fuzzy search
+function normViet(s) {
+  return s.normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[đĐ]/g, 'd')
+    .toLowerCase();
+}
+
+function renderList() {
+  const raw = (document.getElementById('sinput').value || '').toLowerCase();
+  const q   = normViet(raw);
+  const now = Date.now();
+  const lst = words.filter(w => w.confirmed && (!q ||
+    normViet(w.viet).includes(q) ||
+    w.viet.toLowerCase().includes(raw) ||
+    w.meaning.toLowerCase().includes(raw)));
+  document.getElementById('lcnt').textContent = lst.length;
+  document.getElementById('wlist').innerHTML = lst.map(w => {
+    const s   = sGet(w.id);
+    const due = s && s.due <= now;
+    const meta = s ? `間隔${s.interval}日 復習${s.reps}回` : '未学習';
+    return `<div class="wi${due ? ' due' : ''}">
+      <div class="wi-b">
+        <div class="wi-v">${esc(w.viet)}</div>
+        <div class="wi-m">${esc(w.meaning)}</div>
+        ${w.note ? `<div class="wi-n">📝 ${esc(w.note)}</div>` : ''}
+        <div class="wi-meta">${meta}</div>
+      </div>
+      <div class="wi-ac">
+        <button class="ib" onclick="speakWord(${w.id},event)" title="読み上げ">🔊</button>
+        <button class="ib" onclick="openM(${w.id},event)" title="編集">✏️</button>
+        <button class="ib" onclick="delWord(${w.id},event)" title="削除">🗑️</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function speakWord(id, e) {
+  e && e.stopPropagation();
+  const w = words.find(x => x.id === id);
+  if (w) { speak(w.viet, detectLang(w.viet)); }
+}
+
+function delWord(id, e) {
+  e && e.stopPropagation();
+  const w = words.find(x => x.id === id);
+  if (!w) return;
+  const s = sGet(w.id);
+  const detail = s ? `復習${s.reps}回・間隔${s.interval}日` : '未学習';
+  showConfirm(
+    `「${w.viet}」を削除しますか？\n意味: ${w.meaning}\n${detail}`,
+    () => {
+      DELETED_IDS.add(id);
+      words = words.filter(w => w.id !== id);
+      Q = Q.filter(w => w.id !== id);
+      if (qi >= Q.length && Q.length > 0) qi = Q.length - 1;
+      if (curWord && curWord.id === id) {
+        curWord = null;
+        document.getElementById('card').classList.remove('flipped');
+        document.getElementById('btns').classList.remove('on');
+        if (Q.length === 0) showDone(); else showCard();
+      }
+      stateSave();
+      renderList();
+      renderPend();
+      if (document.getElementById('v-check').classList.contains('on')) renderCheck();
+      updHdr();
+      showToast(`🗑️ 「${w.viet}」を削除しました`);
+    },
+    '削除する', '#c0392b'
+  );
+}
+
+function showConfirm(msg, onOk, okLabel, okColor) {
+  const ov = document.getElementById('confirm-ov');
+  // Support newlines in message
+  document.getElementById('confirm-msg').innerHTML = esc(msg).replace(/\n/g, '<br>');
+  const okBtn = document.getElementById('confirm-ok');
+  okBtn.textContent = okLabel || '削除';
+  okBtn.style.background = okColor || '#c0392b';
+  ov.classList.add('on');
+  okBtn.onclick = function() { ov.classList.remove('on'); onOk(); };
+  document.getElementById('confirm-cancel').onclick = function() { ov.classList.remove('on'); };
+}
+
+// ═══════════════════════════════════════════════════
+// STATS VIEW
+// ═══════════════════════════════════════════════════
+function renderStats() {
+  const now     = Date.now();
+  const conf    = words.filter(w => w.confirmed);
+  const studied = conf.filter(w => sGet(w.id));
+  const due     = studied.filter(w => sGet(w.id).due <= now);
+  const mature  = studied.filter(w => (sGet(w.id).interval || 0) >= 21);
+  const sp = conf.length    > 0 ? Math.round(studied.length / conf.length    * 100) : 0;
+  const mp = studied.length > 0 ? Math.round(mature.length  / studied.length * 100) : 0;
+
+  document.getElementById('swrap').innerHTML = `
+    <div class="sc" style="margin-top:10px;display:flex;flex-direction:column;gap:8px;">
+      <button class="exp-btn" onclick="quickSave()" style="background:var(--green);">
+        ☁️ iCloudにバックアップ（tuVung_state.json）
+      </button>
+      <button class="exp-btn" onclick="document.getElementById('state-import-input').click()" style="background:#7d3c98;">
+        📂 iCloudから復元（tuVung_state.json）
+      </button>
+      <button class="exp-btn" onclick="exportCSV()">
+        📥 単語CSVエクスポート（${conf.length}件）
+      </button>
+      <button class="exp-btn" onclick="showRawState()" style="background:#566573;">
+        📄 バックアップJSONを表示（コピー用）
+      </button>
+      <div style="font-size:.7rem;color:#666;line-height:1.6;margin-top:2px;">
+        ${(() => { const d = daysSinceExport();
+           return d === null ? '最終バックアップ: <b style="color:#c0392b">なし</b>'
+                             : `最終バックアップ: <b>${new Date(MEM['le']).toLocaleString('ja-JP')}</b>（${d}日前）`; })()}
+      </div>
+    </div>
+    <div class="sc"><h3>📊 全体進捗</h3>
+      <div class="sg">
+        <div class="si"><div class="n">${conf.length}</div><div class="l">総単語数</div></div>
+        <div class="si"><div class="n">${studied.length}</div><div class="l">学習済み</div></div>
+        <div class="si"><div class="n">${due.length}</div><div class="l">要復習</div></div>
+        <div class="si"><div class="n">${conf.length - studied.length}</div><div class="l">未学習</div></div>
+      </div>
+      <div class="bar-w">
+        <div class="bar-l"><span>学習進捗</span><span>${sp}%</span></div>
+        <div class="bar-bg"><div class="bar-f" style="width:${sp}%;background:var(--green)"></div></div>
+      </div>
+    </div>
+    <div class="sc"><h3>🧠 記憶状態</h3>
+      <div class="sg">
+        <div class="si"><div class="n">${mature.length}</div><div class="l">熟知（21日+）</div></div>
+        <div class="si"><div class="n">${studied.length - mature.length}</div><div class="l">学習中</div></div>
+      </div>
+      <div class="bar-w">
+        <div class="bar-l"><span>熟知率</span><span>${mp}%</span></div>
+        <div class="bar-bg"><div class="bar-f" style="width:${mp}%;background:#2980b9"></div></div>
+      </div>
+    </div>
+    <div class="sc"><h3>📅 今日</h3>
+      <div class="sg">
+        <div class="si"><div class="n">${getNNew()}</div><div class="l">今日の新規</div></div>
+        <div class="si"><div class="n">${MAX_NEW}</div><div class="l">1日上限</div></div>
+      </div>
+    </div>`;
+}
+
+function exportCSV() {
+  const conf = words.filter(w => w.confirmed);
+  const rows = [['FrontText','BackText','Comment']];
+  conf.forEach(w => {
+    const s = sGet(w.id);
+    const meta = s ? `interval:${s.interval} ef:${s.ef} reps:${s.reps}` : '';
+    const note = [w.note, meta].filter(Boolean).join(' | ');
+    rows.push([w.viet, w.meaning, note]);
+  });
+  const csv  = rows.map(r => r.map(c => '"' + String(c).replace(/"/g,'""') + '"').join(',')).join('\n');
+  const dataUri = 'data:text/csv;charset=utf-8,' + encodeURIComponent('\uFEFF' + csv);
+  const a = document.createElement('a');
+  a.href = dataUri;
+  a.download = 'tuVung_export.csv';
+  a.style.display = 'none';
+  document.body.appendChild(a);
+  setTimeout(() => { a.click(); setTimeout(() => document.body.removeChild(a), 500); }, 10);
+}
+
+// ═══════════════════════════════════════════════════
+// PENDING / ADD VIEW
+// ═══════════════════════════════════════════════════
+function renderPend() {
+  const pend = words.filter(w => !w.confirmed);
+  updHdr();
+  const aaw = document.getElementById('approve-all-wrap');
+  if (aaw) aaw.style.display = pend.length > 1 ? '' : 'none';
+  if (!pend.length) {
+    document.getElementById('plist').innerHTML =
+      '<p style="color:var(--green);font-size:.8rem;padding:10px">✅ すべて確認済み</p>';
+    return;
+  }
+  document.getElementById('plist').innerHTML = pend.map(w => `
+    <div class="pi" id="pi${w.id}">
+      <div class="pi-v">${esc(w.viet)}</div>
+      <div class="pi-m">${esc(w.meaning)}</div>
+      ${w.note ? `<div class="pi-n">📝 ${esc(w.note)}</div>` : ''}
+      <div class="pi-ac">
+        <button class="pb ok" onclick="appr(${w.id})">✓ 承認</button>
+        <button class="pb ed" onclick="openM(${w.id},event)">✏️ 編集</button>
+        <button class="pb dl" onclick="delWord(${w.id},event)">✗ 削除</button>
+      </div>
+    </div>`).join('');
+}
+
+function saveDeleted() { hashSave(); }
+
+function saveConfirmed() { hashSave(); }
+
+function appr(id) {
+  const w = words.find(x => x.id === id);
+  if (w) w.confirmed = true;
+  saveConfirmed();
+  renderPend();
+  renderList();
+  updHdr();
+}
+
+function approveAll() {
+  words.forEach(w => { w.confirmed = true; });
+  saveConfirmed();
+  renderPend();
+  renderList();
+  updHdr();
+}
+
+function madd() {
+  const v = document.getElementById('av').value.trim();
+  const m = document.getElementById('am').value.trim();
+  const n = document.getElementById('an').value.trim();
+  if (!v || !m) { showToast('⚠️ ベトナム語と意味を入力してください'); return; }
+
+  // 1. Duplicate check (normalized)
+  const vNorm = normViet(v);
+  const exact = words.find(w => normViet(w.viet) === vNorm);
+  if (exact) {
+    showConfirm(
+      `「${exact.viet}」は登録済みです\n意味: ${exact.meaning}\n\n重複登録しますか？`,
+      () => _doAdd(v, m, n),
+      'それでも追加', '#e67e22'
+    );
+    return;
+  }
+
+  // 2. Spelling suggestion (close match)
+  const similar = words.filter(w => {
+    const d = editDistance(normViet(w.viet), vNorm);
+    const maxLen = Math.max(w.viet.length, v.length);
+    return d > 0 && d <= 2 && maxLen >= 4;
+  }).slice(0, 3);
+
+  if (similar.length > 0) {
+    const hints = similar.map(w => `・${w.viet}（${w.meaning}）`).join('\n');
+    showConfirm(
+      `似た単語が見つかりました:\n${hints}\n\n「${v}」を新規追加しますか？`,
+      () => _doAdd(v, m, n),
+      '追加する', 'var(--green)'
+    );
+    return;
+  }
+
+  _doAdd(v, m, n);
+}
+
+function _doAdd(v, m, n) {
+  words.push({ id: nid++, viet: v, meaning: m, note: n, confirmed: true });
+  document.getElementById('av').value = '';
+  document.getElementById('am').value = '';
+  document.getElementById('an').value = '';
+  document.getElementById('av').focus();
+  saveConfirmed();
+  updHdr();
+  showToast(`✅ 「${v}」を追加しました`);
+}
+
+
+// ═══════════════════════════════════════════════════
+// BULK PASTE ADD
+// ═══════════════════════════════════════════════════
+const AI_PROMPT =
+`画像の中のベトナム語の単語をすべて抜き出し、次のJSON配列だけを出力してください。
+前置き・説明・コードフェンスは一切不要です。
+[{"v":"ベトナム語","m":"日本語 / english","n":"補足があれば"}]
+・声調記号は正確に付けてください
+・意味は「日本語 / english」の形式で揃えてください
+・重複は取り除いてください`;
+
+let _bulkRows = [];
+
+function bulkPrompt() {
+  shareTextFile('tuVung_prompt.txt', 'text/plain', AI_PROMPT,
+    '📤 プロンプトを書き出しました');
+}
+
+// Accepts a JSON array, or one word per line separated by tab / slash / comma / equals.
+function bulkParse() {
+  const src = (document.getElementById('bulk-in').value || '').trim();
+  if (!src) { showToast('⚠️ 貼り付けてから解析してください'); return; }
+  let rows = [];
+
+  const j = src.indexOf('['), k = src.lastIndexOf(']');
+  if (j >= 0 && k > j) {
+    try {
+      const arr = JSON.parse(src.slice(j, k + 1));
+      if (Array.isArray(arr)) rows = arr.map(o => ({
+        v: String(o.v || o.viet || '').trim(),
+        m: String(o.m || o.meaning || '').trim(),
+        n: String(o.n || o.note || '').trim()
+      }));
+    } catch (e) { rows = []; }
+  }
+
+  if (!rows.length) {
+    src.split(/\r?\n/).forEach(line => {
+      const t = line.trim();
+      if (!t) return;
+      let parts = t.includes('\t') ? t.split('\t') : t.split(/\s+[/=|]\s+|\s*[=|]\s*|\s+\/\s+/);
+      if (parts.length === 1) parts = t.split(/\s*[,、]\s*/);
+      const v = (parts[0] || '').trim();
+      if (!v) return;
+      rows.push({ v, m: (parts[1] || '').trim(), n: parts.slice(2).join(' ').trim() });
+    });
+  }
+
+  rows = rows.filter(r => r.v);
+  if (!rows.length) { showToast('⚠️ 1行も読み取れませんでした'); return; }
+
+  // Flag rows that already exist, exactly or ignoring diacritics
+  const byKey = new Map();
+  words.forEach(w => {
+    const key = normViet(w.viet).trim();
+    if (!byKey.has(key)) byKey.set(key, w);
+  });
+  const seen = new Set();
+  rows.forEach(r => {
+    const key = normViet(r.v).trim();
+    const hit = byKey.get(key);
+    r.dup  = hit ? (hit.viet.trim() === r.v.trim() ? 'same' : 'near') : '';
+    r.dupW = hit ? hit.viet + ' = ' + hit.meaning : '';
+    if (seen.has(key)) { r.dup = 'same'; r.dupW = '（この貼り付け内で重複）'; }
+    seen.add(key);
+    r.use = !r.dup;
+  });
+
+  _bulkRows = rows;
+  bulkPreview();
+}
+
+function bulkPreview() {
+  const on = _bulkRows.filter(r => r.use).length;
+  document.getElementById('bulk-prev').innerHTML = `
+    <div style="margin-top:9px;font-size:.74rem;color:#666;">
+      ${_bulkRows.length}件を読み取り / <b>${on}件</b>を登録対象
+    </div>
+    <div style="max-height:300px;overflow-y:auto;border:1px solid var(--line);border-radius:8px;margin-top:6px;">
+      ${_bulkRows.map((r, i) => `
+        <label style="display:flex;gap:7px;align-items:flex-start;padding:7px 8px;
+                      border-bottom:1px solid var(--line);${r.dup ? 'background:#fff8e1;' : ''}">
+          <input type="checkbox" ${r.use ? 'checked' : ''} onchange="_bulkRows[${i}].use=this.checked;bulkPreview()"
+                 style="margin-top:3px;flex-shrink:0;">
+          <span style="flex:1;min-width:0;">
+            <span style="font-size:.84rem;font-weight:600;">${esc(r.v)}</span>
+            <span style="font-size:.72rem;color:#666;"> — ${esc(r.m) || '<i>意味なし</i>'}</span>
+            ${r.dup ? `<div style="font-size:.66rem;color:#a06000;">
+                        ${r.dup === 'same' ? '⚠️ 登録済み' : '⚠️ 声調違いの既存語あり'}: ${esc(r.dupW)}</div>` : ''}
+          </span>
+        </label>`).join('')}
+    </div>
+    <div class="bulk-row">
+      <button onclick="bulkCommit()" style="background:var(--green);">${on}件を未確認として追加</button>
+      <button onclick="bulkClear()" style="background:var(--line);color:#333;">クリア</button>
+    </div>`;
+}
+
+function bulkClear() {
+  _bulkRows = [];
+  document.getElementById('bulk-in').value = '';
+  document.getElementById('bulk-prev').innerHTML = '';
+}
+
+// Bulk-added words land unconfirmed, so they pass through the existing review queue.
+function bulkCommit() {
+  const sel = _bulkRows.filter(r => r.use);
+  if (!sel.length) { showToast('⚠️ 登録対象がありません'); return; }
+  syncNid();
+  sel.forEach(r => words.push({
+    id: nid++, viet: r.v, meaning: r.m, note: r.n, confirmed: false, q: false
+  }));
+  bulkClear();
+  stateSave();
+  updHdr();
+  renderPend();
+  showToast(`✅ ${sel.length}件を未確認に追加しました`);
+}
+
+// ═══════════════════════════════════════════════════
+// INSPECT (検品)
+// ═══════════════════════════════════════════════════
+const AI_BATCH = 120;
+
+function mKey(s) { return normViet(s).replace(/\s+/g, ' ').trim(); }
+function mParts(m) {
+  return String(m).split(/[/／|,、\n]/).map(x => x.trim().toLowerCase()).filter(Boolean);
+}
+
+// Same spelling ignoring tone marks. If the meanings overlap too, one of them is
+// almost always a typo of the other rather than a real minimal pair.
+function ckDupGroups() {
+  // Identical headwords are duplicates no matter what the meanings say — a
+  // correction pass can turn two different misspellings into the same word.
+  const exactG = new Map();
+  words.forEach(w => {
+    const k = w.viet.trim().toLowerCase().replace(/\s+/g, ' ');
+    if (!k) return;
+    if (!exactG.has(k)) exactG.set(k, []);
+    exactG.get(k).push(w);
+  });
+  const exactGroups = [...exactG.values()].filter(v => v.length > 1);
+  const inExact = new Set();
+  exactGroups.forEach(v => v.forEach(w => inExact.add(w.id)));
+
+  const g = new Map();
+  words.forEach(w => {
+    const k = mKey(w.viet);
+    if (!k) return;
+    if (!g.has(k)) g.set(k, []);
+    g.get(k).push(w);
+  });
+  const hard = [], soft = [];
+
+  g.forEach(v => {
+    if (v.length < 2) return;
+    if (v.every(w => w.q)) return;
+
+    // Only pair up entries whose meanings actually overlap. Grouping the whole
+    // bucket dragged innocent bystanders in: Cỏ(草) and Cơ(muscle) share a
+    // tone-stripped key with Cổ/cổ(neck), and "採用" would have merged all four.
+    const n = v.length, adj = v.map(() => []);
+    const sets = v.map(w => new Set(mParts(w.meaning)));
+    let any = false;
+    for (let i = 0; i < n; i++)
+      for (let j = i + 1; j < n; j++)
+        if ([...sets[j]].some(x => sets[i].has(x))) { adj[i].push(j); adj[j].push(i); any = true; }
+
+    if (!any) { soft.push(v); return; }
+
+    // connected components over that overlap relation
+    const seen = new Array(n).fill(false);
+    for (let i = 0; i < n; i++) {
+      if (seen[i] || !adj[i].length) continue;
+      const comp = [], stack = [i];
+      seen[i] = true;
+      while (stack.length) {
+        const c = stack.pop();
+        comp.push(v[c]);
+        adj[c].forEach(k2 => { if (!seen[k2]) { seen[k2] = true; stack.push(k2); } });
+      }
+      // Exact same spelling is always worth showing, even once reviewed —
+      // a correction pass can turn two misspellings into one duplicated word.
+      const rest = comp.filter(w => !inExact.has(w.id));
+      if (rest.length > 1 && !rest.every(w => w.q)) hard.push(rest);
+    }
+    // entries in the bucket that overlap nobody are simply different words
+  });
+  return { hard: exactGroups.concat(hard), soft };
+}
+
+// The meaning field holds another headword instead of a definition.
+function ckSelfRef() {
+  const heads = new Set(words.map(w => mKey(w.viet)));
+  return words.filter(w => {
+    if (w.q) return false;
+    const first = mParts(w.meaning)[0];
+    return first && mKey(first) !== mKey(w.viet) && heads.has(mKey(first));
+  });
+}
+
+// Three or more entries sharing a first meaning: either duplicates or missing nuance.
+function ckClusters() {
+  const g = new Map();
+  words.forEach(w => {
+    const k = mParts(w.meaning)[0];
+    if (!k) return;
+    if (!g.has(k)) g.set(k, []);
+    g.get(k).push(w);
+  });
+  return [...g.values()].filter(v => v.length >= 3 && !v.every(w => w.q));
+}
+
+function ckBlank() {
+  return words.filter(w => !w.q && (!w.meaning.trim() || /要確認|^\s*[?？]\s*$/.test(w.meaning)));
+}
+
+function dictURL(v) {
+  return 'https://translate.google.com/?sl=vi&tl=ja&op=translate&text=' + encodeURIComponent(v);
+}
+
+function ckRow(w, grp) {
+  // "採用" merges the rest of the group into this one. Only offered for spelling
+  // duplicates — in a synonym cluster the entries are different words, and
+  // merging them would silently destroy vocabulary.
+  const mg = (grp && grp.length > 1)
+    ? `<button class="ck-mg" onclick="mergeInto(${w.id},[${grp.map(x => x.id).join(',')}])">採用</button>` : '';
+  return `<div class="ck-w">
+    <div class="ck-t">
+      <div class="ck-v">${esc(w.viet)}</div>
+      <div class="ck-m">${esc(w.meaning) || '<i>意味なし</i>'}</div>
+    </div>
+    <div class="ck-b">
+      <a class="ck-dc" href="${dictURL(w.viet)}" target="_blank" rel="noopener">辞書</a>
+      ${mg}
+      <button class="ck-fl ${w.f ? 'on' : ''}" onclick="toggleFlag(${w.id})">🚩</button>
+      <button class="ck-ed" onclick="openM(${w.id},event)">編集</button>
+      <button class="ck-ok" onclick="markQ(${w.id})">OK</button>
+      <button class="ck-dl" onclick="delWord(${w.id},event)">削除</button>
+    </div>
+  </div>`;
+}
+
+// Keep one word, fold the rest of the group into it, then delete them.
+function mergeInto(id, ids) {
+  const keep = words.find(w => w.id === id);
+  if (!keep) return;
+  const others = ids.filter(x => x !== id).map(x => words.find(w => w.id === x)).filter(Boolean);
+  if (!others.length) return;
+
+  showConfirm(
+    `「${keep.viet}」を正として、${others.length}語を統合しますか？\n` +
+    `統合される語: ${others.map(w => w.viet).join('、')}\n意味と学習履歴は引き継がれます。`,
+    () => {
+      // union of meanings, order preserved, duplicates dropped
+      const seen = new Set(), parts = [];
+      [keep, ...others].forEach(w => mParts(w.meaning).forEach((x, i) => {
+        const raw = String(w.meaning).split(/[/／|,、\n]/)[i];
+        const t = (raw !== undefined ? raw : x).trim();
+        if (t && !seen.has(x)) { seen.add(x); parts.push(t); }
+      }));
+      keep.meaning = parts.join(' / ');
+      const notes = [keep.note, ...others.map(w => w.note)].filter(Boolean);
+      keep.note = [...new Set(notes)].join(' / ');
+
+      // carry over the furthest-along review record
+      let best = sGet(keep.id);
+      others.forEach(w => {
+        const s2 = sGet(w.id);
+        if (s2 && (!best || (s2.reps || 0) > (best.reps || 0))) best = s2;
+      });
+      if (best) MEM['s' + keep.id] = best;
+
+      others.forEach(w => {
+        DELETED_IDS.add(w.id);
+        delete MEM['s' + w.id];
+      });
+      const gone = new Set(others.map(w => w.id));
+      words = words.filter(w => !gone.has(w.id));
+      Q = Q.filter(w => !gone.has(w.id));
+      keep.q = true; keep.f = false;
+
+      stateSave();
+      updHdr();
+      renderList();
+      renderCheck();
+      showToast(`✅ 「${keep.viet}」に${others.length}語を統合しました`);
+    }, '統合する', '#d68910');
+}
+
+// Flag a word you could not verify on the spot; the next AI batch takes it first.
+function toggleFlag(id) {
+  const w = words.find(x => x.id === id);
+  if (!w) return;
+  w.f = !w.f;
+  if (w.f) w.q = false;
+  stateSave();
+  renderCheck();
+  showToast(w.f ? '🚩 要修正に入れました' : '🚩 解除しました');
+}
+
+function ckSection(title, groups, note, mergeable) {
+  const cnt = groups.reduce((a, g) => a + g.length, 0);
+  if (!cnt) return '';
+  return `<div class="ck-sec">
+    <h4>${title}<span class="ck-n">${cnt}語</span></h4>
+    ${note ? `<div style="font-size:.68rem;color:#888;margin-bottom:6px;">${note}</div>` : ''}
+    ${groups.map(g => `<div class="ck-g">${mergeable && g.length > 1
+        ? '<div class="ck-hint">正しい方の「採用」を押すと、もう一方を統合して削除します。</div>' : ''
+      }${g.map(w => ckRow(w, mergeable ? g : null)).join('')}</div>`).join('')}
+  </div>`;
+}
+
+function markQ(id) {
+  const w = words.find(x => x.id === id);
+  if (!w) return;
+  w.q = true;
+  stateSave();
+  renderCheck();
+}
+
+function renderCheck() {
+  const dup = ckDupGroups();
+  const self = ckSelfRef(), cl = ckClusters(), bl = ckBlank();
+  const checked = words.filter(w => w.q).length;
+
+  const flagged = words.filter(w => w.f);
+  const body =
+    ckSection('🚩 要修正マーク', flagged.map(w => [w]),
+      'その場で判断できなかった語です。次の検品用ファイルに優先して入ります。') +
+    ckSection('⚠️ 綴り違い・重複の疑い', dup.hard,
+      '声調を無視すると同じ綴りで、意味も重なっています。片方が誤記である可能性が高い組み合わせです。', true) +
+    ckSection('📄 意味欄が別の見出し語', self.map(w => [w]),
+      '定義ではなく別の単語が入っています。訳語を補うか、メモ欄へ移してください。') +
+    ckSection('🔁 同じ意味が3件以上', cl,
+      '多くは別々の語です。統合せず、意味を訳し分けてください。綴りを直すと、重複はこの上の欄に移ります。') +
+    ckSection('❓ 意味が未記入', bl.map(w => [w])) +
+    ckSection('🔤 声調違いの類似語', dup.soft,
+      '意味は異なるため正しい可能性が高いですが、念のため確認してください。');
+
+  document.getElementById('ckwrap').innerHTML = `
+    <div class="sc" style="margin-top:10px;">
+      <h3>🤖 AIで綴り・意味をチェック</h3>
+      <div style="font-size:.7rem;color:#666;line-height:1.6;margin-bottom:7px;">
+        未検品の単語を${AI_BATCH}語ずつ<b>ファイルに書き出し</b>ます。そのファイルをClaudeに添付し、
+        返ってきた修正JSONをファイルとして保存して取り込むと、一括で修正されます。
+      </div>
+      <div class="bulk-row" style="margin-top:0;">
+        <button onclick="aiExport()" style="background:#2980b9;">検品用ファイルを書き出す</button>
+        <button onclick="document.getElementById('ai-file-input').click()" style="background:#7d3c98;">修正ファイルを取り込む</button>
+      </div>
+      <textarea id="ai-in" class="bulk-ta" style="height:90px;margin-top:7px;"
+        placeholder='（貼り付けが使える環境なら、修正JSONを直接ここに貼っても取り込めます）'></textarea>
+      <div class="bulk-row">
+        <button onclick="aiApply()" style="background:var(--green);">貼り付けた内容を取り込む</button>
+      </div>
+      <div style="font-size:.7rem;color:#666;margin-top:7px;">
+        検品済み <b>${checked}</b> / ${words.length}語${flagged.length ? ` ・ 要修正 <b style="color:#c0392b">${flagged.length}</b>` : ''}
+      </div>
+    </div>
+    ${body || '<p class="ck-empty">✅ 自動チェックで検出された問題はありません</p>'}`;
+}
+
+function aiExport() {
+  const rest = words.filter(w => w.f).concat(words.filter(w => !w.q && !w.f));
+  if (!rest.length) { showToast('✅ 未検品の単語はありません'); return; }
+  const batch = rest.slice(0, AI_BATCH);
+  MEM['ab'] = batch.map(w => w.id);
+  stateSave();
+  const head =
+`次はベトナム語単語帳の一部です。各行は「id<TAB>ベトナム語<TAB>意味」です。
+ベトナム語の綴り（声調記号を含む）と意味を確認し、誤りがある行だけを
+[{"id":123,"v":"正しい綴り","m":"正しい意味"}]
+のJSON配列で出力してください。前置き・説明・コードフェンスは不要です。
+誤りが無ければ [] とだけ出力してください。
+---
+` + batch.map(w => `${w.id}\t${w.viet}\t${w.meaning}`).join('\n');
+  shareTextFile('tuVung_check.txt', 'text/plain', head,
+    `📤 ${batch.length}語を書き出しました — Claudeに添付してください`);
+}
+
+function aiApply() {
+  const src = (document.getElementById('ai-in').value || '').trim();
+  if (!src) { showToast('⚠️ 修正JSONを貼り付けてください'); return; }
+  const j = src.indexOf('['), k = src.lastIndexOf(']');
+  let arr;
+  try { arr = JSON.parse(src.slice(j, k + 1)); } catch (e) { arr = null; }
+  if (!Array.isArray(arr)) { showToast('⚠️ JSONとして読み取れませんでした'); return; }
+
+  let fixed = 0;
+  arr.forEach(o => {
+    const w = words.find(x => x.id === +o.id);
+    if (!w) return;
+    if (o.v && o.v !== w.viet)    { w.viet = String(o.v); fixed++; }
+    if (o.m && o.m !== w.meaning) { w.meaning = String(o.m); fixed++; }
+    w.q = true; w.f = false;
+  });
+
+  // The whole exported batch counts as reviewed, not just the corrected rows.
+  const batch = MEM['ab'] || [];
+  batch.forEach(id => { const w = words.find(x => x.id === id); if (w) { w.q = true; w.f = false; } });
+  MEM['ab'] = [];
+
+  document.getElementById('ai-in').value = '';
+  stateSave();
+  updHdr();
+  renderCheck();
+  showToast(`✅ ${arr.length}語を修正 / ${batch.length}語を検品済みに`);
+}
+
+function readTextFile(file, cb) {
+  const r = new FileReader();
+  r.onload = e => { try { cb(String(e.target.result || '')); }
+                    catch (err) { showToast('⚠️ 読み込みに失敗しました'); } };
+  r.onerror = () => showToast('⚠️ ファイルを開けませんでした');
+  r.readAsText(file);
+}
+
+// Shared clipboard helper with a manual-copy fallback for locked-down browsers.
+function copyText(txt, okMsg) {
+  const ta = document.createElement('textarea');
+  ta.value = txt;
+  ta.style.cssText = 'position:fixed;top:0;left:0;opacity:0;';
+  document.body.appendChild(ta);
+  ta.focus(); ta.select();
+  let ok = false;
+  try {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(txt); ok = true;
+    } else ok = document.execCommand('copy');
+  } catch (e) {}
+  document.body.removeChild(ta);
+  if (ok) showToast(okMsg);
+  else {
+    document.getElementById('rjson').value = txt;
+    document.getElementById('rsize').textContent = '自動コピー不可 — 長押しで全選択してコピーしてください';
+    document.getElementById('rov').classList.add('on');
+  }
+}
+
+function showToast(msg) {
+  let t = document.getElementById('toast');
+  if (!t) {
+    t = document.createElement('div');
+    t.id = 'toast';
+    t.style.cssText = 'position:fixed;bottom:calc(24px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);background:#333;color:#fff;padding:9px 18px;border-radius:20px;font-size:.78rem;z-index:500;transition:opacity .3s;pointer-events:none;';
+    document.body.appendChild(t);
+  }
+  t.textContent = msg;
+  t.style.opacity = '1';
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => { t.style.opacity = '0'; }, 2000);
+}
+
+// ═══════════════════════════════════════════════════
+// EDIT MODAL
+// ═══════════════════════════════════════════════════
+let eid = null;
+function openM(id, e) {
+  e && e.stopPropagation();
+  const w = words.find(x => x.id === id);
+  if (!w) return;
+  eid = id;
+  document.getElementById('ev').value = w.viet;
+  document.getElementById('em').value = w.meaning;
+  document.getElementById('en').value = w.note || '';
+  document.getElementById('eov').classList.add('on');
+}
+function closeM() { document.getElementById('eov').classList.remove('on'); }
+
+function editCurrent(e) {
+  e && e.stopPropagation();
+  if (!curWord) return;
+  openM(curWord.id, e);
+}
+function delCurrent(e) {
+  e && e.stopPropagation();
+  if (!curWord) return;
+  delWord(curWord.id, e);
+}
+function saveM() {
+  const w = words.find(x => x.id === eid);
+  if (w) {
+    w.viet    = document.getElementById('ev').value;
+    w.meaning = document.getElementById('em').value;
+    w.note    = document.getElementById('en').value;
+  }
+  closeM();
+  saveConfirmed();
+  if (curWord && curWord.id === eid) showCard();
+  renderList();
+  renderPend();
+  if (document.getElementById('v-check').classList.contains('on')) renderCheck();
+}
+
+// ═══════════════════════════════════════════════════
+// UTILS
+// ═══════════════════════════════════════════════════
+function esc(s) {
+  return String(s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;');
+}
+
+function updSaveIcon() {
+  const el = document.getElementById('save-icon');
+  if (!el) return;
+  el.textContent = _saveOk ? '✅' : '⚠️';
+  el.title = _saveOk ? '自動保存済み' : '保存できていません';
+}
+
+function updHdr() {
+  const now  = Date.now();
+  const conf = words.filter(w => w.confirmed);
+  const due  = conf.filter(w => { const s = sGet(w.id); return s && s.due <= now; });
+  document.getElementById('hstats').innerHTML =
+    `<span>全${conf.length}件</span><span>要復習 <b>${due.length}</b></span><span>新規 <b>${Math.max(0, MAX_NEW - getNNew())}</b>/日</span><span id="save-icon">💾</span>`;
+  updSaveIcon();
+  const p = words.filter(w => !w.confirmed).length;
+  document.getElementById('pcnt').textContent = p;
+  document.getElementById('pbanner').classList.toggle('on', p > 0);
+  updBackupBanner();
+}
+
+// ═══════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════
+window.addEventListener('DOMContentLoaded', function() {
+  const restored = stateLoad();
+  syncNid();
+  if (restored === 'local') {
+    // Loaded from localStorage — silently update header
+    updHdr();
+    initSRS();
+  } else if (restored === 'session') {
+    updHdr();
+    initSRS();
+  } else {
+    // No saved state found — prompt to import iCloud backup
+    updHdr();
+    initSRS();
+    setTimeout(() => {
+      showToast('💡 初回起動 — 統計タブから tuVung_state.json を読み込んでください');
+    }, 1000);
+  }
+});
+
+// Auto-save before page unload
+window.addEventListener('beforeunload', function() {
+  stateSave();
+});
+// Auto-save when tab goes to background (iOS home button etc.)
+document.addEventListener('visibilitychange', function() {
+  if (document.hidden) stateSave();
+});
+// Auto-save on page blur
+window.addEventListener('blur', function() { stateSave(); });
+
+// Auto-save periodically (every 30s) as safety net
+setInterval(stateSave, 30000);
+</script>
+</body>
+</html>
